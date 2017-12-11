@@ -28,4 +28,38 @@ class User < ActiveRecord::Base
     return "#{first_name} #{last_name}".strip if (first_name || last_name)
     "Anonymous"
   end
+  
+  def self.search(param)
+    param.strip!
+    param.downcase!
+    to_send_back = where('first_name LIKE :search OR last_name LIKE :search OR email LIKE :search', search: "%#{param}%").uniq
+    return nil unless to_send_back
+    to_send_back
+  end
+  
+  
+  # all of this can be deleted 
+  def self.first_name_matches(param)
+    matches('first_name', param)
+  end
+  
+  def self.last_name_matches(param)
+    matches('last_name', param)
+  end
+  
+  def self.email_name_matches(param)
+    matches('email', param)
+  end
+  
+  def self.matches(field_name, param)
+    User.where("#{field_name} like ?", "%#{param}%")
+  end
+  
+  def except_current_user(users)
+    users.reject { |user| user.id == self.id }
+  end
+  
+  def not_friends_with?(friend_id)
+    friendships.where(friend_id: friend_id).count < 1
+  end
 end
